@@ -1,0 +1,2 @@
+INFO:tracing.span:ScanTaskSource::get_data;
+{"case": "s3-multi-suffixon-schemagiven-2", "rows": 192, "full_result_validated": true, "total_seconds": 0.07364487300003475}

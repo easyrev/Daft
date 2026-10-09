@@ -1,0 +1,16 @@
+{
+  "sha": "d3cd974150ba93dbbe8efef8370b129538fcee4b",
+  "python": "3.11.16 (main, Sep 24 2026, 17:56:40) [Clang 22.1.3 ]",
+  "executable": "/workspace/daft-issue-1881/.venv/bin/python",
+  "pyarrow": "22.0.0",
+  "daft": "0.3.0-dev0",
+  "package": "/workspace/daft-issue-1881/daft/__init__.py",
+  "extension": "/workspace/daft-issue-1881/daft/daft.abi3.so",
+  "artifact": "/workspace/daft-issue-1881/target/debug/libdaft.so",
+  "sha256": "cc08a6cd45aa1d65ebb279188553c953870accc7af07744c28a5a8afea905800",
+  "rust": "rustc 1.98.0-nightly (d1fc603d1 2026-05-26)\nbinary: rustc\ncommit-hash: d1fc603d1788cc3c0eebdb94a45a61c4f33b1674\ncommit-date: 2026-05-26\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.0-nightly\nLLVM version: 22.1.6\n",
+  "build_type": "dev",
+  "runner": "native",
+  "git_status": "?? analysis/\n",
+  "source_diff": ""
+}

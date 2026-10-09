@@ -1,0 +1,16 @@
+{
+  "sha": "d3cd974150ba93dbbe8efef8370b129538fcee4b",
+  "python": "3.11.16 (main, Sep 24 2026, 17:56:40) [Clang 22.1.3 ]",
+  "executable": "/workspace/daft-issue-1881/.venv/bin/python",
+  "pyarrow": "22.0.0",
+  "daft": "0.3.0-dev0",
+  "package": "/workspace/daft-issue-1881/daft/__init__.py",
+  "extension": "/workspace/daft-issue-1881/daft/daft.abi3.so",
+  "artifact": "/workspace/daft-issue-1881/target/debug/libdaft.so",
+  "sha256": "51da8b7ba0115eaf5aabf5db6e5878d5b26307cb130f8761d16605e841e56f63",
+  "rust": "rustc 1.98.0-nightly (d1fc603d1 2026-05-26)\nbinary: rustc\ncommit-hash: d1fc603d1788cc3c0eebdb94a45a61c4f33b1674\ncommit-date: 2026-05-26\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.0-nightly\nLLVM version: 22.1.6\n",
+  "build_type": "dev",
+  "runner": "native",
+  "git_status": " M src/daft-io/src/stats.rs\n M src/daft-local-execution/src/sources/scan_task_reader.rs\n M src/daft-scan/src/glob.rs\n?? analysis/\n",
+  "source_diff": "diff --git a/src/daft-io/src/stats.rs b/src/daft-io/src/stats.rs\nindex 2e3368339..2f6e20bec 100644\n--- a/src/daft-io/src/stats.rs\n+++ b/src/daft-io/src/stats.rs\n@@ -28,7 +28,7 @@ impl Drop for IOStatsContext {\n         let num_puts = self.load_put_requests();\n         let mean_get_size = (bytes_read as f64) / (num_gets as f64);\n         let mean_put_size = (bytes_uploaded as f64) / (num_puts as f64);\n-        log::trace!(\n+        log::info!(\n             \"IOStatsContext: {}, Gets: {}, Heads: {}, Lists: {}, Deletes: {}, BytesRead: {}, AvgGetSize: {}, BytesUploaded: {}, AvgPutSize: {}\",\n             self.name,\n             num_gets,\ndiff --git a/src/daft-local-execution/src/sources/scan_task_reader.rs b/src/daft-local-execution/src/sources/scan_task_reader.rs\nindex 4ba6dbe61..7e9f1dac1 100644\n--- a/src/daft-local-execution/src/sources/scan_task_reader.rs\n+++ b/src/daft-local-execution/src/sources/scan_task_reader.rs\n@@ -109,6 +109,7 @@ async fn read_parquet(\n     skipped_corrupt_files: SkippedCorruptFilesCollector,\n ) -> DaftResult<BoxStream<'static, DaftResult<RecordBatch>>> {\n     let source = scan_task.sources.first().unwrap();\n+    log::info!(\"ISSUE1881_SCAN_SOURCE path={url} size_bytes={:?} chunk_spec={:?} embedded_metadata={}\", source.size_bytes, source.get_chunk_spec(), source.get_parquet_metadata().is_some());\n \n     let row_groups = match source.get_chunk_spec() {\n         Some(ChunkSpec::Parquet(rgs)) => Some(rgs.clone()),\ndiff --git a/src/daft-scan/src/glob.rs b/src/daft-scan/src/glob.rs\nindex 59aac812c..7fd3eaf98 100644\n--- a/src/daft-scan/src/glob.rs\n+++ b/src/daft-scan/src/glob.rs\n@@ -188,6 +188,7 @@ impl GlobScanOperator {\n \n             let FileMetadata {\n                 filepath: first_filepath,\n+                size: first_discovered_size,\n                 ..\n             } = match paths.next().await {\n                 Some(file_metadata) => file_metadata,\n@@ -197,6 +198,8 @@ impl GlobScanOperator {\n                 .into()),\n             }?;\n \n+            log::info!(\"ISSUE1881_DISCOVERED path={first_filepath} physical_size={first_discovered_size:?}\");\n+\n             // Infer schema from the candidate file, with minimal behavior: only skip empty JSON files when configured.\n             let (inferred_schema, first_metadata, first_filepath) = match file_format_config\n                 .as_ref()\n"
+}

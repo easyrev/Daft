@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/workspace/daft-issue-1881/analysis/issue-1881/run_case.py", line 53, in <module>
+    from daft.table import MicroPartition
+ModuleNotFoundError: No module named 'daft.table'

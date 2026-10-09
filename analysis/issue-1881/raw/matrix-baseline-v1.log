@@ -1,0 +1,36 @@
+http-single-suffixon-schemainfer-1 PASS
+http-single-suffixon-schemainfer-2 PASS
+http-single-suffixon-schemainfer-3 PASS
+http-single-suffixoff-schemainfer-1 PASS
+http-single-suffixoff-schemainfer-2 PASS
+http-single-suffixoff-schemainfer-3 PASS
+http-multi-suffixon-schemainfer-1 PASS
+http-multi-suffixon-schemainfer-2 PASS
+http-multi-suffixon-schemainfer-3 PASS
+http-multi-suffixoff-schemainfer-1 PASS
+http-multi-suffixoff-schemainfer-2 PASS
+http-multi-suffixoff-schemainfer-3 PASS
+s3-single-suffixon-schemainfer-1 PASS
+s3-single-suffixon-schemainfer-2 PASS
+s3-single-suffixon-schemainfer-3 PASS
+s3-single-suffixoff-schemainfer-1 PASS
+s3-single-suffixoff-schemainfer-2 PASS
+s3-single-suffixoff-schemainfer-3 PASS
+s3-glob-suffixon-schemainfer-1 PASS
+s3-glob-suffixon-schemainfer-2 PASS
+s3-glob-suffixon-schemainfer-3 PASS
+s3-glob-suffixoff-schemainfer-1 PASS
+s3-glob-suffixoff-schemainfer-2 PASS
+s3-glob-suffixoff-schemainfer-3 PASS
+s3-multi-suffixon-schemagiven-1 PASS
+s3-multi-suffixon-schemagiven-2 PASS
+s3-multi-suffixon-schemagiven-3 PASS
+s3-multi-suffixoff-schemagiven-1 PASS
+s3-multi-suffixoff-schemagiven-2 PASS
+s3-multi-suffixoff-schemagiven-3 PASS
+Traceback (most recent call last):
+  File "/workspace/daft-issue-1881/analysis/issue-1881/run_matrix.py", line 47, in <module>
+    subprocess.run(cmd, cwd=here.parents[1], env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
+  File "/workspace/.cloud-setup/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/workspace/daft-issue-1881/.venv/bin/python', '/workspace/daft-issue-1881/analysis/issue-1881/run_case.py', '--case', 'http-direct-suffixon-schemainfer-1', '--backend', 'http', '--shape', 'direct', '--data', '/workspace/daft-issue-1881/analysis/issue-1881/generated', '--output', '/workspace/daft-issue-1881/analysis/issue-1881/raw/baseline-v1/http-direct-suffixon-schemainfer-1.json']' returned non-zero exit status 1.

@@ -1,0 +1,17 @@
+http-single-suffixon-schemainfer-1 PASS
+http-single-suffixon-schemainfer-2 PASS
+http-single-suffixoff-schemainfer-1 PASS
+http-single-suffixoff-schemainfer-2 PASS
+s3-glob-suffixon-schemainfer-1 PASS
+s3-glob-suffixon-schemainfer-2 PASS
+s3-glob-suffixoff-schemainfer-1 PASS
+s3-glob-suffixoff-schemainfer-2 PASS
+s3-multi-suffixon-schemagiven-1 PASS
+s3-multi-suffixon-schemagiven-2 PASS
+s3-multi-suffixoff-schemagiven-1 PASS
+s3-multi-suffixoff-schemagiven-2 PASS
+http-direct-suffixon-schemainfer-1 PASS
+http-direct-suffixon-schemainfer-2 PASS
+http-direct-suffixoff-schemainfer-1 PASS
+http-direct-suffixoff-schemainfer-2 PASS
+saved /workspace/daft-issue-1881/analysis/issue-1881/raw/instrumented/counts.csv

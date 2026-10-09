@@ -1,0 +1,6 @@
+INFO:tracing.span:ScanTaskSource::get_data;
+Traceback (most recent call last):
+  File "/workspace/daft-issue-1881/analysis/issue-1881/run_case.py", line 67, in <module>
+    out = dict(case=args.case, backend=args.backend, shape=args.shape, disable_suffix_range=config.disable_suffix_range,
+                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'daft.daft.IOConfig' object has no attribute 'disable_suffix_range'

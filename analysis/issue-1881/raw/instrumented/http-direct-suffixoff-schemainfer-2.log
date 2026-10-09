@@ -1,0 +1,2 @@
+INFO:daft_io.stats:IOStatsContext: read_parquet: for uri http://127.0.0.1:9001/http/part-0.parquet, Gets: 4, Heads: 2, Lists: 0, Deletes: 0, BytesRead: 5189, AvgGetSize: 1297, BytesUploaded: 0, AvgPutSize: 0
+{"case": "http-direct-suffixoff-schemainfer-2", "rows": 96, "full_result_validated": true, "total_seconds": 0.09991232400000172}

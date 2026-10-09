@@ -1,0 +1,10 @@
+INFO:daft_io.stats:IOStatsContext: GlobScanOperator::try_new schema inference for s3://public-bucket-issue1881/data/part-0.parquet, Gets: 0, Heads: 1, Lists: 0, Deletes: 0, BytesRead: 0, AvgGetSize: 0, BytesUploaded: 0, AvgPutSize: 0
+INFO:daft_io.stats:IOStatsContext: GlobScanOperator::to_scan_tasks for [
+    "s3://public-bucket-issue1881/data/part-0.parquet",
+    "s3://public-bucket-issue1881/data/part-1.parquet",
+], Gets: 0, Heads: 2, Lists: 0, Deletes: 0, BytesRead: 0, AvgGetSize: 0, BytesUploaded: 0, AvgPutSize: 0
+INFO:tracing.span:ScanTaskSource::get_data;
+INFO:daft_local_execution.sources.scan_task_reader:ISSUE1881_SCAN_SOURCE path=s3://public-bucket-issue1881/data/part-0.parquet size_bytes=Some(3284) chunk_spec=None embedded_metadata=false
+INFO:daft_local_execution.sources.scan_task_reader:ISSUE1881_SCAN_SOURCE path=s3://public-bucket-issue1881/data/part-1.parquet size_bytes=Some(3300) chunk_spec=None embedded_metadata=false
+INFO:daft_io.stats:IOStatsContext: , Gets: 8, Heads: 4, Lists: 0, Deletes: 0, BytesRead: 10410, AvgGetSize: 1301, BytesUploaded: 0, AvgPutSize: 0
+{"case": "s3-multi-suffixoff-schemagiven-2", "rows": 192, "full_result_validated": true, "total_seconds": 0.07780826999999135}

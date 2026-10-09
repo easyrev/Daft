@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/workspace/daft-issue-1881/analysis/issue-1881/run_case.py", line 11, in <module>
+    import daft
+ModuleNotFoundError: No module named 'daft'

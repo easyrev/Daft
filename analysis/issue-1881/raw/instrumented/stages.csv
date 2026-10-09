@@ -1,0 +1,49 @@
+case,backend,stage,source_physical_sizes,reader_size,HEAD,LIST,GET,emitted_body_bytes,validated
+http-direct-suffixoff-schemainfer-1,http,reader execution,not provided (direct reader),unknown on entry,2,0,4,5189,True
+http-direct-suffixoff-schemainfer-2,http,reader execution,not provided (direct reader),unknown on entry,2,0,4,5189,True
+http-direct-suffixon-schemainfer-1,http,reader execution,not provided (direct reader),unknown on entry,1,0,4,5189,True
+http-direct-suffixon-schemainfer-2,http,reader execution,not provided (direct reader),unknown on entry,1,0,4,5189,True
+http-single-suffixoff-schemainfer-1,http,schema inference,3284,unknown on entry,1,0,1,3284,True
+http-single-suffixoff-schemainfer-1,http,discovery during construction,3284,unknown on entry,1,0,0,0,True
+http-single-suffixoff-schemainfer-1,http,discovery during collection,3284,unknown on entry,1,0,0,0,True
+http-single-suffixoff-schemainfer-1,http,reader execution,3284,unknown on entry,2,0,4,5189,True
+http-single-suffixoff-schemainfer-2,http,schema inference,3284,unknown on entry,1,0,1,3284,True
+http-single-suffixoff-schemainfer-2,http,discovery during construction,3284,unknown on entry,1,0,0,0,True
+http-single-suffixoff-schemainfer-2,http,discovery during collection,3284,unknown on entry,1,0,0,0,True
+http-single-suffixoff-schemainfer-2,http,reader execution,3284,unknown on entry,2,0,4,5189,True
+http-single-suffixon-schemainfer-1,http,schema inference,3284,unknown on entry,0,0,1,3284,True
+http-single-suffixon-schemainfer-1,http,discovery during construction,3284,unknown on entry,1,0,0,0,True
+http-single-suffixon-schemainfer-1,http,discovery during collection,3284,unknown on entry,1,0,0,0,True
+http-single-suffixon-schemainfer-1,http,reader execution,3284,unknown on entry,1,0,4,5189,True
+http-single-suffixon-schemainfer-2,http,schema inference,3284,unknown on entry,0,0,1,3284,True
+http-single-suffixon-schemainfer-2,http,discovery during construction,3284,unknown on entry,1,0,0,0,True
+http-single-suffixon-schemainfer-2,http,discovery during collection,3284,unknown on entry,1,0,0,0,True
+http-single-suffixon-schemainfer-2,http,reader execution,3284,unknown on entry,1,0,4,5189,True
+s3-glob-suffixoff-schemainfer-1,s3-compatible,schema inference,3300/3284,unknown on entry,1,0,1,3284,True
+s3-glob-suffixoff-schemainfer-1,s3-compatible,discovery during construction,3300/3284,unknown on entry,0,1,0,918,True
+s3-glob-suffixoff-schemainfer-1,s3-compatible,discovery during collection,3300/3284,unknown on entry,0,1,0,918,True
+s3-glob-suffixoff-schemainfer-1,s3-compatible,reader execution,3300/3284,unknown on entry,4,0,8,10410,True
+s3-glob-suffixoff-schemainfer-2,s3-compatible,schema inference,3284/3300,unknown on entry,1,0,1,3284,True
+s3-glob-suffixoff-schemainfer-2,s3-compatible,discovery during construction,3284/3300,unknown on entry,0,1,0,918,True
+s3-glob-suffixoff-schemainfer-2,s3-compatible,discovery during collection,3284/3300,unknown on entry,0,1,0,918,True
+s3-glob-suffixoff-schemainfer-2,s3-compatible,reader execution,3284/3300,unknown on entry,4,0,8,10410,True
+s3-glob-suffixon-schemainfer-1,s3-compatible,schema inference,3284/3300,unknown on entry,0,0,1,3284,True
+s3-glob-suffixon-schemainfer-1,s3-compatible,discovery during construction,3284/3300,unknown on entry,0,1,0,918,True
+s3-glob-suffixon-schemainfer-1,s3-compatible,discovery during collection,3284/3300,unknown on entry,0,1,0,918,True
+s3-glob-suffixon-schemainfer-1,s3-compatible,reader execution,3284/3300,unknown on entry,2,0,8,10410,True
+s3-glob-suffixon-schemainfer-2,s3-compatible,schema inference,3300/3284,unknown on entry,0,0,1,3284,True
+s3-glob-suffixon-schemainfer-2,s3-compatible,discovery during construction,3300/3284,unknown on entry,0,1,0,918,True
+s3-glob-suffixon-schemainfer-2,s3-compatible,discovery during collection,3300/3284,unknown on entry,0,1,0,918,True
+s3-glob-suffixon-schemainfer-2,s3-compatible,reader execution,3300/3284,unknown on entry,2,0,8,10410,True
+s3-multi-suffixoff-schemagiven-1,s3-compatible,discovery during construction,3284/3300,unknown on entry,1,0,0,0,True
+s3-multi-suffixoff-schemagiven-1,s3-compatible,discovery during collection,3284/3300,unknown on entry,2,0,0,0,True
+s3-multi-suffixoff-schemagiven-1,s3-compatible,reader execution,3284/3300,unknown on entry,4,0,8,10410,True
+s3-multi-suffixoff-schemagiven-2,s3-compatible,discovery during construction,3284/3300,unknown on entry,1,0,0,0,True
+s3-multi-suffixoff-schemagiven-2,s3-compatible,discovery during collection,3284/3300,unknown on entry,2,0,0,0,True
+s3-multi-suffixoff-schemagiven-2,s3-compatible,reader execution,3284/3300,unknown on entry,4,0,8,10410,True
+s3-multi-suffixon-schemagiven-1,s3-compatible,discovery during construction,3284/3300,unknown on entry,1,0,0,0,True
+s3-multi-suffixon-schemagiven-1,s3-compatible,discovery during collection,3284/3300,unknown on entry,2,0,0,0,True
+s3-multi-suffixon-schemagiven-1,s3-compatible,reader execution,3284/3300,unknown on entry,2,0,8,10410,True
+s3-multi-suffixon-schemagiven-2,s3-compatible,discovery during construction,3284/3300,unknown on entry,1,0,0,0,True
+s3-multi-suffixon-schemagiven-2,s3-compatible,discovery during collection,3284/3300,unknown on entry,2,0,0,0,True
+s3-multi-suffixon-schemagiven-2,s3-compatible,reader execution,3284/3300,unknown on entry,2,0,8,10410,True

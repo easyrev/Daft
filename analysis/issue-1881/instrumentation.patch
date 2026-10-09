@@ -1,0 +1,46 @@
+diff --git a/src/daft-io/src/stats.rs b/src/daft-io/src/stats.rs
+index 2e3368339..2f6e20bec 100644
+--- a/src/daft-io/src/stats.rs
++++ b/src/daft-io/src/stats.rs
+@@ -28,7 +28,7 @@ impl Drop for IOStatsContext {
+         let num_puts = self.load_put_requests();
+         let mean_get_size = (bytes_read as f64) / (num_gets as f64);
+         let mean_put_size = (bytes_uploaded as f64) / (num_puts as f64);
+-        log::trace!(
++        log::info!(
+             "IOStatsContext: {}, Gets: {}, Heads: {}, Lists: {}, Deletes: {}, BytesRead: {}, AvgGetSize: {}, BytesUploaded: {}, AvgPutSize: {}",
+             self.name,
+             num_gets,
+diff --git a/src/daft-local-execution/src/sources/scan_task_reader.rs b/src/daft-local-execution/src/sources/scan_task_reader.rs
+index 4ba6dbe61..7e9f1dac1 100644
+--- a/src/daft-local-execution/src/sources/scan_task_reader.rs
++++ b/src/daft-local-execution/src/sources/scan_task_reader.rs
+@@ -109,6 +109,7 @@ async fn read_parquet(
+     skipped_corrupt_files: SkippedCorruptFilesCollector,
+ ) -> DaftResult<BoxStream<'static, DaftResult<RecordBatch>>> {
+     let source = scan_task.sources.first().unwrap();
++    log::info!("ISSUE1881_SCAN_SOURCE path={url} size_bytes={:?} chunk_spec={:?} embedded_metadata={}", source.size_bytes, source.get_chunk_spec(), source.get_parquet_metadata().is_some());
+ 
+     let row_groups = match source.get_chunk_spec() {
+         Some(ChunkSpec::Parquet(rgs)) => Some(rgs.clone()),
+diff --git a/src/daft-scan/src/glob.rs b/src/daft-scan/src/glob.rs
+index 59aac812c..7fd3eaf98 100644
+--- a/src/daft-scan/src/glob.rs
++++ b/src/daft-scan/src/glob.rs
+@@ -188,6 +188,7 @@ impl GlobScanOperator {
+ 
+             let FileMetadata {
+                 filepath: first_filepath,
++                size: first_discovered_size,
+                 ..
+             } = match paths.next().await {
+                 Some(file_metadata) => file_metadata,
+@@ -197,6 +198,8 @@ impl GlobScanOperator {
+                 .into()),
+             }?;
+ 
++            log::info!("ISSUE1881_DISCOVERED path={first_filepath} physical_size={first_discovered_size:?}");
++
+             // Infer schema from the candidate file, with minimal behavior: only skip empty JSON files when configured.
+             let (inferred_schema, first_metadata, first_filepath) = match file_format_config
+                 .as_ref()

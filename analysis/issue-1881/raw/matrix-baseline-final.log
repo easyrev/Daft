@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/workspace/daft-issue-1881/analysis/issue-1881/run_matrix.py", line 47, in <module>
+    subprocess.run(cmd, cwd=here.parents[1], env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
+  File "/workspace/.cloud-setup/python/cpython-3.11.16-linux-x86_64-gnu/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/workspace/daft-issue-1881/.venv/bin/python', '/workspace/daft-issue-1881/analysis/issue-1881/run_case.py', '--case', 'http-single-suffixon-schemainfer-1', '--backend', 'http', '--shape', 'single', '--data', '/workspace/daft-issue-1881/analysis/issue-1881/generated', '--output', '/workspace/daft-issue-1881/analysis/issue-1881/raw/baseline/http-single-suffixon-schemainfer-1.json']' returned non-zero exit status 1.

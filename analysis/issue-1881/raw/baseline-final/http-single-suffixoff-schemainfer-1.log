@@ -1,0 +1,2 @@
+INFO:tracing.span:ScanTaskSource::get_data;
+{"case": "http-single-suffixoff-schemainfer-1", "rows": 96, "full_result_validated": true, "total_seconds": 0.16330054900004143}

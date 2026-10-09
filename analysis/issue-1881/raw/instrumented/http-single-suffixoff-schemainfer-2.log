@@ -1,0 +1,10 @@
+INFO:daft_scan.glob:ISSUE1881_DISCOVERED path=http://127.0.0.1:9001/http/part-0.parquet physical_size=Some(3284)
+INFO:daft_io.stats:IOStatsContext: GlobScanOperator constructor read_parquet_schema: for uri http://127.0.0.1:9001/http/part-0.parquet, Gets: 1, Heads: 1, Lists: 0, Deletes: 0, BytesRead: 3284, AvgGetSize: 3284, BytesUploaded: 0, AvgPutSize: 0
+INFO:daft_io.stats:IOStatsContext: GlobScanOperator::try_new schema inference for http://127.0.0.1:9001/http/part-0.parquet, Gets: 0, Heads: 1, Lists: 0, Deletes: 0, BytesRead: 0, AvgGetSize: 0, BytesUploaded: 0, AvgPutSize: 0
+INFO:daft_io.stats:IOStatsContext: GlobScanOperator::to_scan_tasks for [
+    "http://127.0.0.1:9001/http/part-0.parquet",
+], Gets: 0, Heads: 1, Lists: 0, Deletes: 0, BytesRead: 0, AvgGetSize: 0, BytesUploaded: 0, AvgPutSize: 0
+INFO:tracing.span:ScanTaskSource::get_data;
+INFO:daft_local_execution.sources.scan_task_reader:ISSUE1881_SCAN_SOURCE path=http://127.0.0.1:9001/http/part-0.parquet size_bytes=Some(3284) chunk_spec=None embedded_metadata=false
+INFO:daft_io.stats:IOStatsContext: , Gets: 4, Heads: 2, Lists: 0, Deletes: 0, BytesRead: 5189, AvgGetSize: 1297, BytesUploaded: 0, AvgPutSize: 0
+{"case": "http-single-suffixoff-schemainfer-2", "rows": 96, "full_result_validated": true, "total_seconds": 0.15806882999993377}

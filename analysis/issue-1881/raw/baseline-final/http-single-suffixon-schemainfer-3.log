@@ -1,0 +1,2 @@
+INFO:tracing.span:ScanTaskSource::get_data;
+{"case": "http-single-suffixon-schemainfer-3", "rows": 96, "full_result_validated": true, "total_seconds": 0.15852383100002498}
