@@ -134,6 +134,7 @@ async fn read_parquet(
 
         return count_pushdown_stream(
             url,
+            source.get_physical_file_size(),
             io_client,
             io_stats,
             cfg.field_id_mapping.clone(),
@@ -144,6 +145,7 @@ async fn read_parquet(
     }
 
     let opts = ParquetReadOptions {
+        physical_file_size: source.get_physical_file_size(),
         columns: file_column_names,
         num_rows: scan_task.pushdowns.limit,
         row_groups,
@@ -197,6 +199,7 @@ fn parquet_count_pushdown_unsupported_reason(
 
 async fn count_pushdown_stream(
     url: &str,
+    physical_file_size: Option<u64>,
     io_client: Arc<daft_io::IOClient>,
     io_stats: IOStatsRef,
     field_id_mapping: Option<Arc<std::collections::BTreeMap<i32, daft_core::prelude::Field>>>,
@@ -205,6 +208,7 @@ async fn count_pushdown_stream(
 ) -> DaftResult<BoxStream<'static, DaftResult<RecordBatch>>> {
     daft_parquet::read::stream_parquet_count_pushdown(
         url,
+        physical_file_size,
         io_client,
         Some(io_stats),
         field_id_mapping,

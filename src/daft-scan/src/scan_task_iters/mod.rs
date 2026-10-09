@@ -245,6 +245,7 @@ fn split_by_row_groups(
                         let file_metadata = io_runtime
                             .block_on_current_thread(read_parquet_metadata(
                                 path,
+                                source.get_physical_file_size(),
                                 io_client,
                                 Some(io_stats),
                                 field_id_mapping.clone(),
@@ -355,4 +356,159 @@ pub fn split_and_merge_pass(
     let merged_tasks = merge_by_sizes(split_tasks, pushdowns, cfg);
     let scan_tasks: Vec<ScanTaskRef> = merged_tasks.collect::<DaftResult<Vec<_>>>()?;
     Ok(Arc::new(scan_tasks))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        collections::hash_map::DefaultHasher,
+        hash::{Hash, Hasher},
+        path::Path,
+    };
+
+    use common_py_serde::bincode;
+    use daft_schema::schema::Schema;
+
+    use super::*;
+    use crate::{ScanOperator, glob::GlobScanOperator, storage_config::StorageConfig};
+
+    fn discover(name: &str) -> ScanTaskRef {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/assets/parquet-data")
+            .join(name);
+        let runtime = common_runtime::get_io_runtime(true);
+        let operator = runtime
+            .block_on_current_thread(GlobScanOperator::try_new(
+                vec![path.to_str().unwrap().to_string()],
+                Arc::new(FileFormatConfig::Parquet(ParquetSourceConfig::default())),
+                Arc::new(StorageConfig::default()),
+                false,
+                Some(Arc::new(Schema::empty())),
+                None,
+                false,
+                false,
+            ))
+            .unwrap();
+        operator
+            .to_scan_tasks(Pushdowns::default())
+            .unwrap()
+            .remove(0)
+    }
+
+    fn hash(task: &ScanTask) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        task.hash(&mut hasher);
+        hasher.finish()
+    }
+
+    fn roundtrip(task: &ScanTask) -> ScanTask {
+        // This is also the encoding used by PyScanTask's pickle implementation.
+        let config = bincode::config::legacy();
+        let bytes = bincode::serde::encode_to_vec(task, config).unwrap();
+        let (restored, consumed): (ScanTask, _) =
+            bincode::serde::decode_from_slice(&bytes, config).unwrap();
+        assert_eq!(consumed, bytes.len());
+        assert_eq!(&restored, task);
+        assert_eq!(hash(&restored), hash(task));
+        restored
+    }
+
+    #[test]
+    fn physical_file_size_survives_split_merge_and_serialization() {
+        let task = discover("mvp.parquet");
+        let physical_size = task.sources[0].get_physical_file_size().unwrap();
+        assert_eq!(
+            physical_size,
+            std::fs::metadata(daft_io::strip_file_uri_to_path(task.sources[0].get_path()).unwrap())
+                .unwrap()
+                .len()
+        );
+        let tasks = split_by_row_groups(Box::new(std::iter::once(Ok(task))), 10, 1, 1)
+            .collect::<DaftResult<Vec<_>>>()
+            .unwrap();
+        assert_eq!(tasks.len(), 10);
+        let mut sizes = std::collections::HashSet::new();
+        for (i, task) in tasks.iter().enumerate() {
+            let restored = roundtrip(task);
+            let source = &restored.sources[0];
+            assert_eq!(source.get_physical_file_size(), Some(physical_size));
+            assert_eq!(
+                source.get_chunk_spec(),
+                Some(&ChunkSpec::Parquet(vec![i as i64]))
+            );
+            let compressed_size: u64 = source
+                .get_parquet_metadata()
+                .unwrap()
+                .row_groups()
+                .map(|(_, rg)| rg.compressed_size() as u64)
+                .sum();
+            assert_eq!(source.size_bytes, Some(compressed_size));
+            assert_eq!(restored.size_bytes_on_disk, Some(compressed_size));
+            assert!(compressed_size < physical_size);
+            sizes.insert(compressed_size);
+        }
+        assert!(
+            sizes.len() > 1,
+            "fixture must have unequal compressed row-group sizes"
+        );
+
+        let other = discover("parquet-with-schema-metadata.parquet");
+        let other_size = other.sources[0].get_physical_file_size().unwrap();
+        assert_ne!(physical_size, other_size);
+        let cfg = DaftExecutionConfig {
+            scan_tasks_min_size_bytes: usize::MAX,
+            scan_tasks_max_size_bytes: usize::MAX,
+            ..Default::default()
+        };
+        let merged = merge_by_sizes(
+            Box::new(vec![Ok(tasks[0].clone()), Ok(other)].into_iter()),
+            &Pushdowns::default(),
+            &cfg,
+        )
+        .collect::<DaftResult<Vec<_>>>()
+        .unwrap();
+        assert_eq!(merged.len(), 1);
+        let restored = roundtrip(&merged[0]);
+        assert_eq!(restored.sources.len(), 2);
+        assert_eq!(
+            restored.sources[0].get_physical_file_size(),
+            Some(physical_size)
+        );
+        assert_eq!(
+            restored.sources[1].get_physical_file_size(),
+            Some(other_size)
+        );
+        assert_eq!(
+            restored.size_bytes_on_disk,
+            Some(restored.sources.iter().map(|s| s.size_bytes.unwrap()).sum())
+        );
+        let readers = Arc::new(restored).split().collect::<Vec<_>>();
+        assert_eq!(
+            readers[0].sources[0].get_physical_file_size(),
+            Some(physical_size)
+        );
+        assert_eq!(
+            readers[1].sources[0].get_physical_file_size(),
+            Some(other_size)
+        );
+    }
+
+    #[test]
+    fn physical_file_size_hash_and_optional_values() {
+        let original = discover("mvp.parquet");
+        let mut task = roundtrip(&original);
+        let original_hash = hash(&task);
+        for size in [None, Some(0), Some(u64::MAX)] {
+            let ScanSourceKind::File {
+                physical_file_size, ..
+            } = &mut task.sources[0].kind
+            else {
+                unreachable!()
+            };
+            *physical_file_size = size;
+            assert_ne!(&task, original.as_ref());
+            assert_ne!(hash(&task), original_hash);
+            assert_eq!(roundtrip(&task).sources[0].get_physical_file_size(), size);
+        }
+    }
 }

@@ -403,6 +403,16 @@ fn validate_footer_magic(uri: &str, buffer: &[u8]) -> super::Result<()> {
 // Shared footer I/O
 // ---------------------------------------------------------------------------
 
+pub(crate) fn file_size_as_usize(uri: &str, size: Option<u64>) -> super::Result<Option<usize>> {
+    size.map(|size| {
+        usize::try_from(size).map_err(|_| Error::ReaderInternal {
+            path: uri.to_string(),
+            message: format!("Physical file size {size} cannot be represented on this platform"),
+        })
+    })
+    .transpose()
+}
+
 /// Fetches raw parquet footer bytes from a URI, handling suffix range fallback
 /// and two-pass reads for large footers.
 ///

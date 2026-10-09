@@ -176,6 +176,10 @@ pub struct ScanSource {
 pub enum ScanSourceKind {
     File {
         path: String,
+        /// Length of the whole physical object in bytes, including any footer.
+        /// Unlike `ScanSource::size_bytes`, this does not shrink when a task is split.
+        /// Reusing it assumes the object has not changed since it was discovered.
+        physical_file_size: Option<u64>,
         chunk_spec: Option<ChunkSpec>,
         iceberg_delete_files: Option<Vec<String>>,
         parquet_metadata: Option<Arc<DaftParquetMetadata>>,
@@ -201,12 +205,14 @@ impl Hash for ScanSource {
         match &self.kind {
             ScanSourceKind::File {
                 path,
+                physical_file_size,
                 chunk_spec,
                 iceberg_delete_files,
                 ..
             } => {
                 0u8.hash(state);
                 path.hash(state);
+                physical_file_size.hash(state);
                 chunk_spec.hash(state);
                 iceberg_delete_files.hash(state);
             }
@@ -230,6 +236,16 @@ impl Hash for ScanSource {
 }
 
 impl ScanSource {
+    #[must_use]
+    pub fn get_physical_file_size(&self) -> Option<u64> {
+        match &self.kind {
+            ScanSourceKind::File {
+                physical_file_size, ..
+            } => *physical_file_size,
+            _ => None,
+        }
+    }
+
     #[must_use]
     pub fn get_path(&self) -> &str {
         match &self.kind {
@@ -950,6 +966,7 @@ mod test {
                 statistics: None,
                 partition_spec: None,
                 kind: ScanSourceKind::File {
+                    physical_file_size: None,
                     path: format!("test{i}"),
                     chunk_spec: None,
                     iceberg_delete_files: None,
@@ -1104,6 +1121,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.warc.gz".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1146,6 +1164,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.warc.gz".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1192,6 +1211,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.warc.gz".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1236,6 +1256,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.parquet".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1284,6 +1305,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.parquet".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1335,6 +1357,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.parquet".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1385,6 +1408,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.parquet".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1446,6 +1470,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "rank_0_train.parquet".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,
@@ -1561,6 +1586,7 @@ mod test {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path: "test.parquet".to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,

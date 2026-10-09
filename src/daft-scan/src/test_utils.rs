@@ -79,6 +79,7 @@ impl ScanOperator for DummyScanOperator {
                         statistics: None,
                         partition_spec: None,
                         kind: ScanSourceKind::File {
+                            physical_file_size: None,
                             path: format!("dummy_file_{}.txt", i),
                             chunk_spec: None,
                             iceberg_delete_files: None,

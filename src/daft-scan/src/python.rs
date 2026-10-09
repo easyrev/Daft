@@ -102,6 +102,7 @@ impl PyDataSourceTask {
             statistics,
             partition_spec: Some(pspec),
             kind: ScanSourceKind::File {
+                physical_file_size: None,
                 path,
                 chunk_spec: None,
                 iceberg_delete_files,
@@ -843,6 +844,7 @@ pub mod pylib {
                 statistics,
                 partition_spec: Some(pspec),
                 kind: ScanSourceKind::File {
+                    physical_file_size: None,
                     path: file,
                     chunk_spec: None,
                     iceberg_delete_files,
@@ -1021,6 +1023,7 @@ pub mod pylib {
         let (schema, metadata) = io_runtime.block_on_current_thread(
             daft_parquet::read::read_parquet_schema_and_metadata(
                 uri,
+                Some(file_size),
                 default::Default::default(),
                 None,
                 default::Default::default(),
@@ -1040,6 +1043,7 @@ pub mod pylib {
             statistics: None,
             partition_spec: None,
             kind: ScanSourceKind::File {
+                physical_file_size: Some(file_size),
                 path: uri.to_string(),
                 chunk_spec: None,
                 iceberg_delete_files: None,

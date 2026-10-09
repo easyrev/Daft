@@ -101,20 +101,38 @@ pub(super) async fn prepare_remote_chunk_source(
     io_stats: Option<daft_io::IOStatsRef>,
     opts: &ParquetReadOptions,
 ) -> crate::Result<(ChunkSourceBuilder, ArrowReaderMetadata)> {
-    let (parquet_metadata_res, file_size_res) = Box::pin(futures::future::join(
-        crate::metadata::read_parquet_metadata(
-            uri,
-            None,
-            io_client.clone(),
-            io_stats.clone(),
-            None,
-            None,
-        ),
-        io_client.single_url_get_size(uri.to_string(), io_stats.clone()),
-    ))
-    .await;
-    let mut parquet_metadata = parquet_metadata_res?;
-    let file_size = file_size_res?;
+    let file_size = crate::metadata::file_size_as_usize(uri, opts.physical_file_size)?;
+    let file_size = match file_size {
+        Some(size) => Some(size),
+        None if !io_client.support_suffix_range() => {
+            // The bounded footer read and ChunkReader::len need the same object length.
+            Some(
+                io_client
+                    .single_url_get_size(uri.to_string(), io_stats.clone())
+                    .await?,
+            )
+        }
+        None => None,
+    };
+    let metadata = crate::metadata::read_parquet_metadata(
+        uri,
+        file_size,
+        io_client.clone(),
+        io_stats.clone(),
+        None,
+        None,
+    );
+    let (mut parquet_metadata, file_size) = if let Some(size) = file_size {
+        (metadata.await?, size)
+    } else {
+        // Keep the suffix footer GET and independent length lookup concurrent.
+        let (metadata, size) = Box::pin(futures::future::join(
+            metadata,
+            io_client.single_url_get_size(uri.to_string(), io_stats.clone()),
+        ))
+        .await;
+        (metadata?, size?)
+    };
 
     // Apply Iceberg field-id mapping before filtering by column name —
     // otherwise the prefetch matches pre-rename names against post-rename

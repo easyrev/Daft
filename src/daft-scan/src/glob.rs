@@ -188,6 +188,7 @@ impl GlobScanOperator {
 
             let FileMetadata {
                 filepath: first_filepath,
+                size: first_file_size,
                 ..
             } = match paths.next().await {
                 Some(file_metadata) => file_metadata,
@@ -216,6 +217,7 @@ impl GlobScanOperator {
                     // readable file — avoiding a redundant re-glob.
                     let try_infer = daft_parquet::read::read_parquet_schema_and_metadata(
                         first_filepath.as_str(),
+                        first_file_size,
                         io_client.clone(),
                         Some(IOStatsContext::new(format!(
                             "GlobScanOperator constructor read_parquet_schema: for uri {first_filepath}"
@@ -248,12 +250,13 @@ impl GlobScanOperator {
                             .await?;
                             let mut found = None;
                             while let Some(fm) = glob_stream.next().await {
-                                let FileMetadata { filepath, .. } = fm?;
+                                let FileMetadata { filepath, size, .. } = fm?;
                                 if filepath == first_filepath {
                                     continue; // already tried this one
                                 }
                                 match daft_parquet::read::read_parquet_schema_and_metadata(
                                     filepath.as_str(),
+                                    size,
                                     io_client.clone(),
                                     Some(IOStatsContext::new(format!(
                                         "GlobScanOperator schema fallback: for uri {filepath}"
@@ -769,6 +772,7 @@ impl ScanOperator for GlobScanOperator {
                             partition_spec,
                             statistics: None,
                             kind: ScanSourceKind::File {
+                                physical_file_size: size_bytes,
                                 path,
                                 chunk_spec,
                                 iceberg_delete_files: None,

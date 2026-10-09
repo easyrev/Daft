@@ -315,6 +315,7 @@ pub mod pylib {
             let (schema, _) =
                 runtime.block_on_current_thread(crate::read::read_parquet_schema_and_metadata(
                     uri,
+                    None,
                     io_client,
                     Some(io_stats),
                     schema_infer,

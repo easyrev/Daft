@@ -117,6 +117,7 @@ impl ScanOperator for BlobStoreCheckpointedKeysScanOperator {
                         statistics: None,
                         partition_spec: None,
                         kind: ScanSourceKind::File {
+                            physical_file_size: None,
                             path,
                             chunk_spec: None::<ChunkSpec>,
                             iceberg_delete_files: None,

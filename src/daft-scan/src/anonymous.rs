@@ -110,6 +110,7 @@ impl ScanOperator for AnonymousScanOperator {
                         statistics: None,
                         partition_spec: None,
                         kind: ScanSourceKind::File {
+                            physical_file_size: None,
                             path: f,
                             chunk_spec,
                             iceberg_delete_files: None,

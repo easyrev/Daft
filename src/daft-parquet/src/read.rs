@@ -85,6 +85,8 @@ impl Default for ParquetSchemaInferenceOptions {
 /// All projection, pushdown, and decode options for reading one parquet file.
 #[derive(Default, Clone)]
 pub struct ParquetReadOptions {
+    /// Length of the whole physical file, including the footer, when already known.
+    pub physical_file_size: Option<u64>,
     pub columns: Option<Vec<String>>,
     pub start_offset: Option<usize>,
     pub num_rows: Option<usize>,
@@ -162,6 +164,7 @@ fn check_per_file_len(per_file: &[PerFileOptions], uris_len: usize) -> DaftResul
 fn single_opts_for(opts: &ParquetBulkReadOptions, i: usize) -> ParquetReadOptions {
     let per = opts.per_file.get(i).cloned().unwrap_or_default();
     ParquetReadOptions {
+        physical_file_size: None,
         columns: opts.columns.clone(),
         start_offset: opts.start_offset,
         num_rows: opts.num_rows,
@@ -272,9 +275,10 @@ async fn read_parquet_into_arrow(
     // Read data and metadata concurrently. The metadata read is needed to recover
     // schema-level key-value metadata (e.g. custom metadata like {"str": "foo"}) and
     // per-field nullability — info that Daft's `RecordBatch` doesn't carry.
+    let file_size = crate::metadata::file_size_as_usize(uri, opts.physical_file_size)?;
     let data_fut = read_parquet_into_recordbatch(uri, io_client.clone(), io_stats.clone(), opts);
     let metadata_fut =
-        crate::metadata::read_parquet_metadata(uri, None, io_client, io_stats, None, None);
+        crate::metadata::read_parquet_metadata(uri, file_size, io_client, io_stats, None, None);
     let (rb, parquet_metadata) =
         Box::pin(futures::future::try_join(data_fut, metadata_fut.err_into())).await?;
     let num_rows_read = rb.len();
@@ -451,6 +455,7 @@ pub fn read_parquet_into_pyarrow_bulk(
 
 pub async fn read_parquet_schema_and_metadata(
     uri: &str,
+    physical_file_size: Option<u64>,
     io_client: Arc<IOClient>,
     io_stats: Option<IOStatsRef>,
     schema_inference_options: ParquetSchemaInferenceOptions,
@@ -458,7 +463,7 @@ pub async fn read_parquet_schema_and_metadata(
 ) -> DaftResult<(Schema, DaftParquetMetadata)> {
     let metadata = crate::metadata::read_parquet_metadata(
         uri,
-        None,
+        crate::metadata::file_size_as_usize(uri, physical_file_size)?,
         io_client,
         io_stats,
         field_id_mapping,
@@ -472,13 +477,14 @@ pub async fn read_parquet_schema_and_metadata(
 
 pub async fn read_parquet_metadata(
     uri: &str,
+    physical_file_size: Option<u64>,
     io_client: Arc<IOClient>,
     io_stats: Option<IOStatsRef>,
     field_id_mapping: Option<Arc<BTreeMap<i32, Field>>>,
 ) -> DaftResult<DaftParquetMetadata> {
     let metadata = crate::metadata::read_parquet_metadata(
         uri,
-        None,
+        crate::metadata::file_size_as_usize(uri, physical_file_size)?,
         io_client,
         io_stats,
         field_id_mapping,
@@ -502,7 +508,9 @@ pub async fn read_parquet_metadata_bulk(
         let io_stats = io_stats.clone();
         let field_id_mapping = field_id_mapping.clone();
         joinset.spawn_on(
-            async move { read_parquet_metadata(&uri, io_client, io_stats, field_id_mapping).await },
+            async move {
+                read_parquet_metadata(&uri, None, io_client, io_stats, field_id_mapping).await
+            },
             &io_runtime,
         );
     }
@@ -519,14 +527,21 @@ pub async fn read_parquet_metadata_bulk(
 /// count pushdown via `supports_count_pushdown`), so metadata errors propagate normally.
 pub async fn stream_parquet_count_pushdown(
     url: &str,
+    physical_file_size: Option<u64>,
     io_client: Arc<IOClient>,
     io_stats: Option<IOStatsRef>,
     field_id_mapping: Option<Arc<BTreeMap<i32, Field>>>,
     aggregation: &ExprRef,
     row_groups: Option<&[i64]>,
 ) -> DaftResult<BoxStream<'static, DaftResult<RecordBatch>>> {
-    let parquet_metadata =
-        read_parquet_metadata(url, io_client, io_stats, field_id_mapping.clone()).await?;
+    let parquet_metadata = read_parquet_metadata(
+        url,
+        physical_file_size,
+        io_client,
+        io_stats,
+        field_id_mapping.clone(),
+    )
+    .await?;
 
     // Currently only CountMode::All is supported for count pushdown.
     //
@@ -587,9 +602,14 @@ pub fn read_parquet_statistics(
                 async move {
                     match uri {
                         Some(uri) => {
-                            let m =
-                                read_parquet_metadata(&uri, io_client, io_stats, field_id_mapping)
-                                    .await?;
+                            let m = read_parquet_metadata(
+                                &uri,
+                                None,
+                                io_client,
+                                io_stats,
+                                field_id_mapping,
+                            )
+                            .await?;
                             Ok((
                                 Some(m.num_rows()),
                                 Some(m.num_row_groups()),
@@ -698,7 +718,7 @@ mod tests {
         let runtime = get_io_runtime(true);
 
         runtime.block_within_async_context(async move {
-            let metadata = read_parquet_metadata(&file, io_client, None, None).await?;
+            let metadata = read_parquet_metadata(&file, None, io_client, None, None).await?;
             let config = bincode::config::legacy();
             let serialized = bincode::serde::encode_to_vec(&metadata, config).unwrap();
             let deserialized: DaftParquetMetadata =
@@ -730,7 +750,7 @@ mod tests {
             .block_within_async_context({
                 let parquet = parquet.clone();
                 let io_client = io_client.clone();
-                async move { read_parquet_metadata(&parquet, io_client, None, None).await }
+                async move { read_parquet_metadata(&parquet, None, io_client, None, None).await }
             })
             .flatten()
             .unwrap();

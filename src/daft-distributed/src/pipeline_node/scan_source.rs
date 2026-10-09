@@ -340,6 +340,7 @@ mod tests {
                         statistics: None,
                         partition_spec: None,
                         kind: ScanSourceKind::File {
+                            physical_file_size: None,
                             path: path.to_string_lossy().into_owned(),
                             chunk_spec: None,
                             iceberg_delete_files: None,
