@@ -12,6 +12,7 @@ import pyarrow.parquet as pq
 import pytest
 
 import daft
+from daft.exceptions import DaftCoreException
 from daft.io import IOConfig
 from daft.recordbatch import MicroPartition
 from tests.conftest import get_tests_daft_runner_name
@@ -165,41 +166,67 @@ def test_remote_projection_filter_limit(parquet_server):
 def test_known_size_invalid_file(parquet_server, data):
     base, files, requests, _ = parquet_server
     files["bad.parquet"] = data
-    with pytest.raises(Exception, match="CorruptFile"):
+    with pytest.raises(DaftCoreException, match="CorruptFile"):
         daft.read_parquet(f"{base}/bad.parquet")
     assert counts(requests)["HEAD"] == 1
     if len(data) < 12:
         assert counts(requests)["GET"] == 0
 
 
-@pytest.mark.parametrize("method,status", [("HEAD", 403), ("GET", 403)])
-def test_io_errors_are_not_ignored(parquet_server, method, status):
-    base, files, _, failures = parquet_server
+@pytest.mark.parametrize("method", ["HEAD", "GET"])
+def test_io_errors_are_not_ignored(parquet_server, method):
+    base, files, requests, failures = parquet_server
     files["data.parquet"], _ = parquet_bytes()
-    failures[method, "data.parquet"] = status
-    with pytest.raises(Exception) as error:
-        daft.read_parquet(f"{base}/data.parquet", ignore_corrupt_files=True).to_pydict()
-    assert "CorruptFile" not in str(error.value)
+    url = f"{base}/data.parquet"
+    failures[method, "data.parquet"] = 403
+    with pytest.raises(DaftCoreException, match="403") as error:
+        daft.read_parquet(url, ignore_corrupt_files=True).to_pydict()
+    assert url in str(error.value)
+    assert any(r[0] == method and r[1] == "data.parquet" and r[3] == 403 for r in requests)
+
+
+@pytest.mark.parametrize("disable_suffix", [False, True])
+def test_known_size_execution_get_error_is_not_ignored(parquet_server, disable_suffix):
+    base, files, requests, failures = parquet_server
+    files["data.parquet"], _ = parquet_bytes()
+    url = f"{base}/data.parquet"
+    # Avoid planning-time footer reads for task splitting, so the failing GET
+    # below comes from the execution reader after successful schema inference.
+    with daft.execution_config_ctx(enable_scan_task_split_and_merge=False):
+        df = daft.read_parquet(url, ignore_corrupt_files=True, io_config=IOConfig(disable_suffix_range=disable_suffix))
+        assert counts(requests) == {"HEAD": 1, "GET": 1}
+        assert all(r[3] in (200, 206) for r in requests)
+        requests[:] = []
+        failures["GET", "data.parquet"] = 403
+        with pytest.raises(DaftCoreException, match="403") as error:
+            df.to_pydict()
+    assert url in str(error.value)
+    # Discovery succeeds; the known-size reader issues only its failing footer GET.
+    assert counts(requests) == {"HEAD": 1, "GET": 1}
+    assert all(r[1] == "data.parquet" and r[3] == (200 if r[0] == "HEAD" else 403) for r in requests)
 
 
 def test_missing_object(parquet_server):
     base, _, _, _ = parquet_server
-    with pytest.raises(Exception, match="not found|No files found|404"):
+    with pytest.raises(FileNotFoundError, match="404") as error:
         MicroPartition.read_parquet(f"{base}/missing.parquet", predicate=daft.col("id") >= 0)
+    assert f"{base}/missing.parquet" in str(error.value)
 
 
 @pytest.mark.parametrize("disable_suffix,method", [(False, "HEAD"), (True, "HEAD"), (True, "GET")])
 def test_unknown_size_io_failure(parquet_server, disable_suffix, method):
-    base, files, _, failures = parquet_server
+    base, files, requests, failures = parquet_server
     files["data.parquet"], _ = parquet_bytes()
+    url = f"{base}/data.parquet"
     failures[method, "data.parquet"] = 403
-    with pytest.raises(Exception) as error:
+    with pytest.raises(DaftCoreException, match="403") as error:
         MicroPartition.read_parquet(
-            f"{base}/data.parquet",
+            url,
             predicate=daft.col("id") >= 0,
             io_config=IOConfig(disable_suffix_range=disable_suffix),
         )
-    assert "CorruptFile" not in str(error.value)
+    assert url in str(error.value)
+    assert any(r[0] == method and r[1] == "data.parquet" and r[3] == 403 for r in requests)
 
 
 @pytest.mark.parametrize("split", [True, False], ids=["split", "merge"])
